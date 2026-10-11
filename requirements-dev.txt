@@ -1,0 +1,5 @@
+# Зависимости для разработки и тестов
+-r requirements.txt
+pytest>=8.0
+httpx>=0.27
+pip-tools>=7.0

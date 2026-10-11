@@ -1,0 +1,26 @@
+# Данные и MLflow-артефакты не должны попадать в образ
+data/
+mlruns/
+mlflow.db
+*.csv
+
+# Python-кэш и тестовые окружения
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# Git и IDE
+.git/
+.github/
+.gitignore
+.idea/
+.vscode/
+
+# Локальные файлы
+*.log
+tests/
+notebooks/
+/tmp/

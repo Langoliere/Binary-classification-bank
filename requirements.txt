@@ -1,0 +1,17 @@
+# Production-зависимости. Точные версии зафиксированы в requirements.lock
+# (генерируется: uv pip compile requirements.txt -o requirements.lock)
+pandas>=2.0
+scikit-learn>=1.5
+xgboost>=2.0
+optuna>=4.0
+mlflow>=3.0
+fastapi>=0.110
+uvicorn>=0.30
+python-multipart>=0.0.9
+pandera>=0.20
+structlog>=24.0
+prometheus-client>=0.20
+prometheus-fastapi-instrumentator>=7.0,<8.0
+opentelemetry-sdk>=1.30
+opentelemetry-exporter-otlp-proto-grpc>=1.30
+opentelemetry-instrumentation-fastapi>=0.50b

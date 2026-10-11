@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Скоринг вкладов</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: #0f172a; color: #e2e8f0;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+  .card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+    padding: 2.5rem; width: min(560px, 92vw); box-shadow: 0 20px 60px #0008;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: .4rem; }
+  p.sub { color: #94a3b8; font-size: .9rem; margin-bottom: 1.6rem; }
+  .drop {
+    border: 2px dashed #475569; border-radius: 12px; padding: 2.2rem 1rem;
+    text-align: center; cursor: pointer; transition: .2s; color: #94a3b8;
+  }
+  .drop:hover, .drop.over { border-color: #38bdf8; color: #e2e8f0; background: #0f172a66; }
+  .drop strong { color: #38bdf8; }
+  #status { margin-top: 1.2rem; font-size: .9rem; min-height: 1.4em; }
+  #status.err { color: #f87171; }
+  #status.ok { color: #4ade80; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: .82rem; }
+  th, td { padding: .45rem .6rem; text-align: left; border-bottom: 1px solid #334155; }
+  th { color: #94a3b8; font-weight: 600; }
+  .bar { height: 8px; border-radius: 4px; background: #38bdf8; }
+  .btn {
+    margin-top: 1rem; display: none; padding: .6rem 1.2rem; border-radius: 8px;
+    background: #38bdf8; color: #0f172a; font-weight: 600; border: 0; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Предсказание вклада клиента</h1>
+  <p class="sub">Загрузите CSV со списком клиентов — сервис вернёт вероятность
+     заключения договора на вклад для каждого.</p>
+
+  <div class="drop" id="drop">
+    Перетащите CSV сюда или <strong>нажмите для выбора</strong>
+    <input type="file" id="file" accept=".csv" hidden>
+  </div>
+
+  <div id="status"></div>
+  <table id="preview" style="display:none"></table>
+  <button class="btn" id="download">Скачать predictions.csv</button>
+</div>
+
+<script>
+const drop = document.getElementById('drop'),
+      input = document.getElementById('file'),
+      status = document.getElementById('status'),
+      table = document.getElementById('preview'),
+      dlBtn = document.getElementById('download');
+let resultBlob = null;
+
+drop.onclick = () => input.click();
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); upload(e.dataTransfer.files[0]); };
+input.onchange = () => upload(input.files[0]);
+
+async function upload(file) {
+  if (!file) return;
+  status.className = ''; status.textContent = 'Скоринг: ' + file.name + '…';
+  table.style.display = 'none'; dlBtn.style.display = 'none';
+
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const resp = await fetch('/predict', { method: 'POST', body: fd });
+    if (!resp.ok) throw new Error((await resp.json()).detail || resp.statusText);
+    resultBlob = await resp.blob();
+    const text = await resultBlob.text();
+    const rows = text.trim().split('\n').map(r => r.split(','));
+    const data = rows.slice(1);
+    const pos = data.filter(r => r[2] === '1').length;
+    status.className = 'ok';
+    status.textContent = `Готово: ${data.length} клиентов, из них ${pos} прогнозируемых вкладов (${(pos/data.length*100).toFixed(1)}%).`;
+    renderPreview(rows[0], data.slice(0, 10));
+    dlBtn.style.display = 'inline-block';
+  } catch (e) {
+    status.className = 'err';
+    status.textContent = 'Ошибка: ' + e.message;
+  }
+}
+
+function renderPreview(header, rows) {
+  table.innerHTML = '<tr>' + header.map(h => `<th>${h}</th>`).join('') + '<th></th></tr>' +
+    rows.map(r => {
+      const p = parseFloat(r[1]);
+      return `<tr><td>${r[0]}</td><td>${(p*100).toFixed(1)}%</td><td>${r[2]}</td>
+              <td style="width:30%"><div class="bar" style="width:${p*100}%"></div></td></tr>`;
+    }).join('');
+  table.style.display = 'table';
+}
+
+dlBtn.onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(resultBlob);
+  a.download = 'predictions.csv';
+  a.click();
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Тесты и кэши
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# MLflow — локальное хранилище трекинга и артефактов
+mlruns/
+mlflow.db
+mlartifacts/
+
+# Данные (большие файлы — вне репозитория)
+data/*.csv
+
+# Джобы и временные файлы сервиса
+bank_jobs/
+*.log
+
+# IDE и OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Windows reserved device names
+nul
+NUL
